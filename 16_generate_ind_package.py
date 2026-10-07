@@ -306,7 +306,13 @@ Generated: {date}
   STOP → 3' UTR → Poly-A tail (120 nt)
 
 5.2 Signal Peptide
-  - Sequence: MDAMKRGLCCVLLLCGAVFVSPSQEIHARFR (MHC-I trafficking)
+  - Sequence: MDAMKRGLCCVLLLCGAVFVSPSQEIHARFR
+    This is the human tissue plasminogen activator (tPA) secretory signal
+    peptide, UniProt P00750. It routes the product into the secretory
+    pathway, favouring MHC class II presentation and antibody responses.
+    An earlier revision described it as providing MHC class I trafficking,
+    which is the opposite of its function. The construct carries no MHC-I
+    trafficking domain and no transmembrane or cytoplasmic anchor.
   - Included to direct translated protein to MHC-I presentation pathway
 
 5.3 Linker Sequence

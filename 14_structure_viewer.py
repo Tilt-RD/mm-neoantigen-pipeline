@@ -13,6 +13,27 @@ Usage:
 Output: output/{patient}_structures/epitope_hla_viewer.html
 """
 
+_DISABLED_REASON = """
+This module is DISABLED because its structural data is fabricated.
+
+`HLA_ALPHA_SEQ` is labelled "Approximate HLA alpha chain sequence
+(AlphaFold2-based)" and is not an HLA sequence. It contains "GGSSGGGSGGGGSSGS",
+a Gly-Ser linker motif that does not occur in HLA, and real HLA-A begins
+"MAVMAPRTLLLLLSGALALTQTWA". No AlphaFold2 model was involved.
+
+Beta-2 microglobulin is a slice of that same fabricated string. The
+coordinates are a flat 2D raster computed from residue index, not a protein
+conformation, and are presented in the interface as a "pMHC Structural
+Viewer".
+
+To restore: use real structures. Published pMHC structures are available from
+the PDB, including crystal structures of KRAS G12D on HLA-A*11:01.
+"""
+
+# Fail closed. This module produced content that fed a vaccine priority
+# score and, in one case, an outbound order. It must not run silently.
+raise RuntimeError(_DISABLED_REASON)
+
 import argparse
 import os
 import sys

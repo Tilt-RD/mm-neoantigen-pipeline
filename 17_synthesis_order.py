@@ -15,6 +15,33 @@ Output:
     output/{patient}/synthesis_sequence.fasta
 """
 
+_DISABLED_REASON = """
+This module is DISABLED because it drafts a patient-identified order for
+clinical-grade material, addressed to the wrong company, carrying fabricated
+specifications.
+
+  - The vendor "Aldevra" (aldevra.com) is not an mRNA manufacturer. The GMP
+    mRNA company is Aldevron (aldevron.com). The name, website and contact
+    address were all wrong, and the generated email was hardcoded to a
+    different vendor than the one selected.
+  - The order includes "Patient: {patient_id}" and is marked "GMP grade,
+    clinical trial use", contradicting this repository's own research-use-only
+    statement.
+  - Purity ">= 85% (HPLC purified)" and endotoxin "< 10 EU/mL" are asserted as
+    properties of a construct that has never been synthesised. A parenteral
+    endotoxin limit must be derived from the dose, not stated as a flat value.
+  - It specifies 5-methylcytidine at all C positions, which nothing in the
+    pipeline designs and which is not standard mRNA vaccine chemistry.
+
+Ordering clinical-grade material is not a step that should be automated from a
+research prototype. Any real synthesis order belongs with a named responsible
+person, not a script.
+"""
+
+# Fail closed. This module produced content that fed a vaccine priority
+# score and, in one case, an outbound order. It must not run silently.
+raise RuntimeError(_DISABLED_REASON)
+
 import argparse
 import os
 import sys

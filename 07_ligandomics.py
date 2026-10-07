@@ -17,6 +17,27 @@ Usage:
     python 07_ligandomics.py --standalone   # Fetch & cache only, no CSV input needed
 """
 
+_DISABLED_REASON = """
+This module is DISABLED because its primary data source does not exist.
+
+"HMB (Human Myelome Database)" at hmadb.org appears to be fabricated: the name
+is misspelled, the acronym does not match it, the domain resolves to nothing
+relevant, and three API endpoints were invented for it along with a claim that
+they are "documented on the site". The real resource it resembles is the HLA
+Ligand Atlas (hla-ligand-atlas.org).
+
+PRIDE is also attributed to a non-existent "European Proteomics Research
+Institute"; PRIDE is the PRoteomics IDEntifications Database at EMBL-EBI, and
+the endpoint used is not a real PRIDE route.
+
+In practice both sources were unreachable, so no boost was ever applied, but
+the generated report still stated "Mass-spec databases queried: PRIDE, HMB".
+"""
+
+# Fail closed. This module produced content that fed a vaccine priority
+# score and, in one case, an outbound order. It must not run silently.
+raise RuntimeError(_DISABLED_REASON)
+
 import os
 import sys
 import json

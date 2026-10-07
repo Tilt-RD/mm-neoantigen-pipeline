@@ -15,6 +15,34 @@ Output:
     output/{patient}_proteomics/proteomics_report.txt
 """
 
+_DISABLED_REASON = """
+This module is DISABLED because its mass-spectrometry evidence is fabricated.
+
+`_pride_fallback` contained 26 peptides asserted to be "real peptides detected
+in MM or related haematological studies", mapped to PRIDE project accessions.
+They are not real:
+
+  - "RTOTFVTFK" contains the letter O, which is not a standard amino acid. No
+    mass spectrometer has ever detected this peptide.
+  - "RLFFVNK" is a 7-mer, below the 8-11mer HLA class I range, yet credited
+    with 8 observations.
+  - "Fraggle" is given as the search engine. No such MS search engine exists.
+  - The PXD accessions are real but attached to invented claims. PXD000561 is
+    the Kim et al. human draft proteome, not a myeloma HLA ligandome.
+
+This mattered because proteomics_score awarded up to +25 to
+vaccine_priority_score, so invented MS evidence promoted peptides into the
+construct. The live endpoint at PRIDE never existed either, so the fabricated
+table was always what was returned.
+
+To restore: obtain real immunopeptidomics evidence. Walz et al., Blood 2015
+(DOI 10.1182/blood-2015-04-640532) is the MM immunopeptidomics reference.
+"""
+
+# Fail closed. This module produced content that fed a vaccine priority
+# score and, in one case, an outbound order. It must not run silently.
+raise RuntimeError(_DISABLED_REASON)
+
 import argparse
 import os
 import sys

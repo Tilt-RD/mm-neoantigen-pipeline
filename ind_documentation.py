@@ -183,7 +183,8 @@ Step 4 — Epitope Ranking and Selection
   - Top N epitopes (default 20) selected for vaccine construct
 
 Step 5 — Vaccine Construct Design
-  - Epitope arrangement: signal peptide (MHC class I trafficking) +
+  - Epitope arrangement: tPA secretory signal peptide (see section 3 of
+    the validation summary: this favours MHC class II, not class I) +
     epitopes connected by GGSGGGGSGG flexible linkers +
     stop codon
   - mRNA modifications:
@@ -259,108 +260,150 @@ Pipeline Version: {version}
 Generated: {date}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-1. METHODOLOGY VALIDATION
+READ THIS FIRST
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-1.1 MHC Binding Prediction Accuracy
+An earlier revision of this section reported validation results that were
+never produced. It is set out plainly here because a reader who saw that
+version needs to know exactly what to discard, and because a document of
+this kind is worthless if its retractions are quieter than its claims.
 
-  Dataset: IEDB MHC binding affinity benchmark (held-out set)
-  Metric: Pearson correlation between predicted and experimental IC50
+RETRACTED IN FULL. None of the following was ever computed by any code in
+this repository:
 
-  PSSM Model:
-    HLA-A*02:01:    r = 0.71 (n=4,521 peptide-HLA pairs)
-    HLA-A*03:01:    r = 0.68 (n=2,104)
-    HLA-B*07:02:    r = 0.65 (n=1,877)
+  - Correlation against IEDB measured affinities, reported as r = 0.71
+    (n = 4,521) for HLA-A*02:01 and similar figures for A*03:01 and B*07:02.
+  - Precision and recall figures of 0.82 / 0.74 and 0.79 / 0.81.
+  - A benchmark against NetMHCpan 4.1 over "MMRF CoMMpass IA13, 50 random
+    patients", reporting strong-binder concordance of 74% versus 82%, top-20
+    epitope overlap of 68% versus 78%, an average IC50 delta of 48 nM versus
+    31 nM, and "clinical recommendations unchanged in 89% of cases". No such
+    comparison was run. There is no code that could run it.
+  - "14/20 MMRF pipeline epitopes detected in published MS studies" and
+    related proteomics concordance figures. These rested on a hardcoded
+    table of peptides that has since been shown to be fabricated, including
+    one sequence containing the letter O, which is not an amino acid.
+  - "8/20 top epitopes have known reactive TCR sequences in VDJdb with
+    affinity Kd < 1 uM". VDJdb does not record Kd values, and the module
+    that was to supply this never populated the field.
+  - "KRAS mutations: 18% of MMRF cohort; NRAS mutations: 12%". The module
+    that was to compute these has never completed a run.
 
-  Comparison vs published benchmarks:
-    - NetMHCpan 4.1: r ≈ 0.75-0.80 (published)
-    - MHCflurry 2.0: r ≈ 0.78 (published)
-    - This pipeline (PSSM): r ≈ 0.65-0.71 (estimated)
-
-  Accuracy at clinical thresholds:
-    IC50 < 50 nM  (strong binder):  Precision = 0.82, Recall = 0.74
-    IC50 < 500 nM (binder):        Precision = 0.79, Recall = 0.81
-
-  NOTE: Published neural network methods (NetMHCpan, MHCflurry)
-  outperform PSSM by ~5-10%. For IND-grade predictions, we recommend
-  running MHCflurry locally or using NetMHCpan via the IEDB
-  MHC Prediction server.
-
-1.2 Agretopicity Index Validation
-
-  - WT/Mutant IC50 ratio correlates with immunogenicity in published
-    literature (Dalosiers et al., Cancer Immunol Res 2022)
-  - Threshold of 1.0 correctly identifies immunogenic mutations in
-    73% of published melanoma dataset (Ghorani et al., Nature 2020)
-  - Agretopicity > 1.5 used as positive signal for epitope selection
-
-1.3 Driver Gene Scoring
-
-  - Driver genes (KRAS, NRAS, TP53, BRAF, DIS3, FAM46C, TRAF3, FGFR3)
-    identified from published MM genomics literature (Chapman et al.,
-    Blood 2011; Lohr et al., Cancer Cell 2014; Rustgi et al., JCO 2022)
-  - dNdScov selection pressure scores confirm positive selection
-    in published MM cohorts
+A reader should assume that any quantitative validation claim not listed in
+section 1 below was not measured.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-2. COMPARISON TO PUBLISHED BENCHMARKS
+1. WHAT WAS ACTUALLY MEASURED
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Benchmark Dataset: MMRF CoMMpass IA13, 50 random patients
-Comparison: NetMHCpan 4.1 (via IEDB server)
+One validation exists. It is small, and it is reported here in full
+including its failures.
 
-  Metric                     This Pipeline    NetMHCpan 4.1
-  ─────────────────────────────────────────────────────
-  Strong binder concordance   74%             82%
-  Weak binder concordance     79%             85%
-  Top epitope overlap (top20) 68%             78%
-  Average IC50 delta           48 nM           31 nM
+Epitope-level recovery (benchmark_epitopes.py)
+  Predictor:  MHCflurry 2.3.13, models_class1_presentation
+  Method:     each documented neoantigen scored against the HLA allele it is
+              actually restricted to, rather than against a default panel
+  Threshold:  500 nM
 
-  NOTE: Discrepancies primarily at IC50 boundary (50/500 nM).
-  Clinical recommendations unchanged in 89% of cases.
+  Result:     2 of 4 experimentally-sourced epitopes recovered
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-3. CROSS-VALIDATION WITH EXTERNAL DATABASES
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Recovered   KRAS G12D on HLA-A*11:01        73.9 nM
+              KRAS G12V on HLA-A*02:01       364.6 nM
+  Missed      TP53 R175H on HLA-A*02:01    1,210.8 nM
+              KRAS G12D on HLA-C*08:02    25,670.3 nM
 
-3.1 PRIDE Proteomics Validation
-  - 14/20 MMRF pipeline epitopes detected in published MS studies
-    of bone marrow plasma cells or MM cell lines (PXD datasets)
-  - KRAS G12V peptide detected in 3 independent experiments
-  - TP53 hotspot mutations: 5/7 detected in PRIDE
+  The HLA-C*08:02 miss is informative rather than anomalous. That epitope
+  rests on a documented clinical response (adoptive transfer, Tran et al.,
+  N Engl J Med 2016, PMID 27959684), and affinity predictors are trained on
+  substantially less HLA-C data than HLA-A or HLA-B.
 
-3.2 VDJdb TCR Validation
-  - 8/20 top epitopes have known reactive TCR sequences
-    in VDJdb with affinity Kd < 1 μM
-  - Cross-reactivity check: 3 epitopes flagged for molecular
-    mimicry with viral analogues
+  Four scoreable epitopes is a smoke test, not an accuracy measurement, and
+  it is not presented as one. Entries resting on computational prediction
+  rather than experimental measurement are excluded from the denominator:
+  scoring a predictor against another predictor measures agreement.
 
-3.3 cBioPortal Cohort Validation
-  - KRAS mutations: 18% of MMRF cohort (consistent with literature)
-  - NRAS mutations: 12% of cohort
-  - Genes with >10% mutation frequency in MM cohorts preferentially
-    weighted in vaccine priority scoring
+  A prior version of this benchmark scored every control against the same
+  six-allele panel. Neither restricting allele for KRAS G12D was in that
+  panel, so the pipeline was asked to find an epitope on molecules that
+  cannot present it and was then recorded as having missed it. Seven of
+  eight positive controls failed that way. The error was in the benchmark,
+  not the predictor.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-4. REPRODUCIBILITY
+2. CITATIONS CORRECTED
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  - Pipeline version tracked in all output JSON files
-  - Random seed set for codon optimisation (seed = patient_id hash)
-  - Cached API responses stored in output/ligandomics_cache/
-  - Software environment documented in requirements.txt
-  - Docker image available (see docker_environment.txt)
+  - "Dalosiers et al., Cancer Immunol Res 2022" does not exist. It was the
+    sole support for the agretopicity index, which carries 25% of the
+    priority score weight. The real work on differential binding affinity is
+    Ghorani et al., Ann Oncol 2018 (PMC5834109).
+  - Chapman et al. 2011 was cited to Blood. It is Nature 2011;471:467-472,
+    PMID 21430775. This repository's own CLINICAL_REPORT.md cites it
+    correctly, so the regulatory document was less accurate than the
+    document it was meant to support.
+  - Ghorani et al. was cited to Nature 2020. The relevant papers are
+    Ann Oncol 2018 and Nature Cancer 2020.
+  - "Rustgi et al., JCO 2022" is unverified as a myeloma genomics source and
+    should not be relied upon.
+  - The claim that "dNdScov selection pressure scores confirm positive
+    selection in published MM cohorts" is withdrawn. Those scores were
+    unsourced constants and the feature is disabled. The limitations
+    statement in this same package already said so; the two documents
+    contradicted each other.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+3. CONSTRUCT DESCRIPTION CORRECTED
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+The signal peptide MDAMKRGLCCVLLLCGAVFVSPSQEIHARFR was described in an
+earlier revision as providing "MHC class I trafficking". That is incorrect
+and the error concerns the mechanism of action.
+
+It is the human tissue plasminogen activator secretory signal peptide
+(tPA, UniProt P00750). It routes the product into the secretory pathway,
+which favours MHC class II presentation and antibody responses. The
+construct contains no MHC class I trafficking domain and no transmembrane
+or cytoplasmic anchor; the architecture terminates at a stop codon after
+the epitope cassette.
+
+Any claim about the class I response this construct would generate requires
+re-examination against that fact.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+4. MODULES DISABLED AFTER AUDIT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+The following raise on import and contribute nothing to any current output.
+Each carries its own explanation in its source file.
+
+  07_proteogenomics.py      fabricated mass-spectrometry evidence (+25 score)
+  09_tcr_repertoire.py      fabricated TCR reference data (+15 score)
+  06_wgs_variant_calling.py fabricated variant calls written as PASS
+  14_structure_viewer.py    non-HLA sequence presented as an HLA model
+  17_synthesis_order.py     patient-identified order to a misidentified vendor
+  08_cbioportal.py          fabricated cohort identifiers
+  07_ligandomics.py         database (hmadb.org) that does not exist
+
+Because two of these contributed additively to vaccine_priority_score, any
+ranking generated before this revision was influenced by fabricated
+evidence and should be regenerated rather than reinterpreted.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 5. KNOWN VALIDATION GAPS (REQUIRED FOR IND)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  [REQUIRED] Patient-specific HLA typing (WES-based, arcasHLA)
-  [REQUIRED] RNA-seq expression validation (patient RNA available?)
+  [REQUIRED] Patient-specific HLA typing (WES or RNA-seq based, arcasHLA)
+  [REQUIRED] RNA-seq expression validation against the patient's own tumour
   [REQUIRED] WT peptide screening (autoreactivity risk)
+  [REQUIRED] Proteome-wide self-similarity screen, which the current
+             safety_screen.py does not perform
   [REQUIRED] GMP mRNA synthesis analytics
   [REQUIRED] In vitro immunogenicity assay (DC-T cell co-culture)
   [REQUIRED] Murine toxicology / biodistribution study
+  [REQUIRED] Independent statistical review. Kaplan-Meier, log-rank and Cox
+             proportional hazards were previously stated as the analysis
+             methods; none is implemented anywhere in this repository, and
+             the survival code takes a censoring-blind median.
   [OPTIONAL] Phosphorylation / PTM screening on neoepitopes
 
 """.strip()

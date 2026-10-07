@@ -16,6 +16,31 @@ Output:
     output/{patient}_wgs_candidates.csv
 """
 
+_DISABLED_REASON = """
+This module is DISABLED because it writes fabricated variant calls to the real
+output files.
+
+`run_demo_variant_calling` emits 11 hardcoded "known MM driver mutations" with
+invented allele frequencies, coverages and quality scores, plus 5-15 randomly
+generated variants at random genomic positions, to the same filenames as real
+calls, with filter="PASS" and no provenance column.
+
+Demo mode is the default path in practice: it triggers on empty GDC results,
+missing pysam, low coverage, or any exception. MMRF CoMMpass BAMs are dbGaP
+controlled-access, so the open-access filter will essentially never return one.
+
+The fabricated table also mixes genome builds (KRAS at GRCh37 coordinates,
+TP53 and BRAF at GRCh38) while the IND methods state GRCh38 throughout.
+
+Separately, the real caller is not a variant caller: it indexes by offset
+within each read rather than by genomic position, so it stacks reads from
+different loci and can never identify a real variant.
+"""
+
+# Fail closed. This module produced content that fed a vaccine priority
+# score and, in one case, an outbound order. It must not run silently.
+raise RuntimeError(_DISABLED_REASON)
+
 import argparse
 import os
 import sys

@@ -42,6 +42,30 @@ Requires
     pip install requests pandas numpy tqdm
 """
 
+_DISABLED_REASON = """
+This module is DISABLED because its cohort identifiers are fabricated and it
+cannot run.
+
+  - Study IDs "mm" and "laml" are not cBioPortal studyIds. Real IDs take the
+    form mm_broad, laml_tcga. The code further asserts "mm" is
+    "CoMMpass-aligned" and offers AML as a "proxy (haematopoietic)" for
+    myeloma, repeating the pattern of the fabricated TCGA-MM cohort that
+    offered breast and lung cancer as substitutes.
+  - On API failure it invents study records with those IDs, prints "Found 2
+    study(ies)", and feeds them downstream as though retrieved.
+  - When no data returns it emits 15 driver genes at mutation_frequency 0.0,
+    which 13_clinical_report.py then prints under "Mutation Frequency in MM
+    Cohort".
+  - A NameError on the default configured path means the module has never
+    completed a run, and a counting bug forces every gene frequency to 1/n.
+  - overall_median_os = 62.0 is hardcoded with no citation and scales every
+    clinical relevance score.
+"""
+
+# Fail closed. This module produced content that fed a vaccine priority
+# score and, in one case, an outbound order. It must not run silently.
+raise RuntimeError(_DISABLED_REASON)
+
 import os
 import sys
 import json

@@ -18,6 +18,33 @@ Usage:
     python 09_tcr_repertoire.py [--input output/selected_epitopes.csv] [--config config.yaml]
 """
 
+_DISABLED_REASON = """
+This module is DISABLED because its TCR reference data is fabricated.
+
+`_get_mcpas_fallback` and `_get_tcrdb_fallback` presented 16 TCR-epitope pairs
+as curated database content. They are not:
+
+  - CDR3 sequences are 9-11 aa; real TCR-beta CDR3s are ~12-18 aa.
+  - Byte-identical TCR pairs appear in two supposedly independent databases.
+  - Epitopes are misattributed: "GTVNWYKPS" is assigned to BRAF V600E and has
+    no relation to codon 600; "RMPEAAPPV" is labelled TP53_mut but is the
+    wild-type TP53 65-73 peptide.
+
+All three database URLs were also wrong. The real addresses are
+vdjdb.cdr3.net, friedmanlab.weizmann.ac.il/McPAS-TCR/ and
+bioinfo.life.hust.edu.cn/TCRdb/ — the fabricated ones were written into the
+output report as the cited sources.
+
+This awarded +15 to vaccine_priority_score. It also underpinned an IND claim
+that epitopes had "known reactive TCR sequences in VDJdb with affinity
+Kd < 1 uM". VDJdb does not record Kd values and this module never populated
+that field.
+"""
+
+# Fail closed. This module produced content that fed a vaccine priority
+# score and, in one case, an outbound order. It must not run silently.
+raise RuntimeError(_DISABLED_REASON)
+
 import os
 import sys
 import json
