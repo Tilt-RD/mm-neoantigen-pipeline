@@ -401,7 +401,7 @@ def generate_trial_report(trials: List[Dict], matches_df: pd.DataFrame,
 
             # Show which epitopes matched this trial
             trial_epitopes = matches_df[matches_df["nct_number"] == nct]["epitope_sequence"].tolist()
-            lines.append(f"  Epitopes: {' | '.join(trial_epitopes[:5]})")
+            lines.append(f"  Epitopes: {' | '.join(trial_epitopes[:5])}")
             if len(trial_epitopes) > 5:
                 lines.append(f"           (+{len(trial_epitopes) - 5} more)")
 

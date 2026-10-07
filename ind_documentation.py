@@ -374,6 +374,27 @@ Pipeline Version: {version}
 Generated: {date}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STATUS OF THIS DOCUMENT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+This is a TEMPLATE generated automatically from a research
+prototype. It is not a regulatory submission, it has not been
+prepared or reviewed by regulatory affairs or clinical personnel,
+and it must not be filed or presented as an IND component in the
+form produced here.
+
+It is machine-generated prose describing what the pipeline does.
+Every factual claim, figure and citation below requires
+verification by a qualified person before any external use. A
+previous revision of this file contained a citation that could not
+be located and a statement of data provenance that was incorrect;
+both have been removed, which is reason to check the rest rather
+than to assume the rest is sound.
+
+The pipeline this describes has not been experimentally validated
+at any stage. No output of it has been tested in vitro or in vivo.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 1. COMPUTATIONAL LIMITATIONS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -394,16 +415,38 @@ Generated: {date}
   - May introduce ±1 amino acid error in epitope position
   - Impact on binding prediction is minimal (<5% of predictions)
 
-1.4 No RNA-Seq Expression Data
-  - Pipeline does not currently filter for tumour RNA expression
-  - Some predicted epitopes may derive from genes with low/absent
-    expression in the patient's tumour
-  - Mitigated by TCGA/MMRF RNA-seq expression data where available
+1.4 Expression Filtering Is Cohort-Level, Not Patient-Level
+  - The pipeline DOES filter on expression, but not using the
+    patient's own RNA-seq. It uses MM_EXPRESSION_PROFILES in
+    expression_filter.py: a fixed table of cohort-average TPM
+    values per gene
+  - Consequently every patient is filtered against the same
+    reference expression values. A gene silenced in this patient's
+    tumour but typically expressed in myeloma will pass the filter
+  - The config key `use_rna_seq: true` is misleading: no RNA-seq
+    file is read at any point
+  - The TPM values in that table are attributed to MMRF CoMMpass
+    and literature but carry no per-value citation and have not
+    been independently verified. The direction is consistent with
+    established myeloma biology; the exact figures should be
+    regenerated from the CoMMpass RNA-seq before any regulatory use
+  - Patient-level filtering requires reading that patient's RNA-seq
+    and is not implemented
 
-1.5 dNdScov Driver Scoring
-  - Uses published gene-level dNdScov scores, not per-patient
-    calculation
-  - May miss patient-specific driver mutations in novel genes
+1.5 dNdScov Driver Scoring — NOT IN USE, PRIOR VALUES UNSOURCED
+  - This section previously stated that the pipeline "uses
+    published gene-level dNdScov scores". That statement was not
+    correct and must not be relied upon
+  - dndscv (Martincorena et al.) is software that computes dN/dS
+    ratios from a cohort's own mutation calls. It does not publish
+    a table of per-gene constants, and the fifteen values formerly
+    in config.yaml did not originate from any run of it
+  - Those values fed a bonus term in the candidate priority score,
+    so any ranking generated with them was shaped by numbers of
+    unknown origin
+  - The feature is now disabled. Restoring it requires running
+    dndscv against the MMRF MAF, or taking driver status from a
+    citable source such as OncoKB or IntOGen
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 2. BIOLOGICAL LIMITATIONS
@@ -411,8 +454,16 @@ Generated: {date}
 
 2.1 Neoantigen Immunogenicity
   - Computational prediction does not guarantee T-cell response
-  - Up to 30% of strong MHC binders fail to stimulate T-cells
-    in vivo (Bhide et al., Nat Rev Cancer 2022)
+  - Only a minority of predicted strong MHC binders elicit a
+    detectable T-cell response; attrition between predicted
+    binding and measured immunogenicity is substantial and is
+    the central limitation of prediction-led epitope selection
+  - No specific attrition percentage is quoted here. An earlier
+    revision cited "up to 30% ... (Bhide et al., Nat Rev Cancer
+    2022)". That reference could not be located and should be
+    treated as unverified; it has been removed rather than
+    restated. Any figure used in a regulatory submission must
+    carry a citation the reviewer can retrieve
 
 2.2 WT Peptide Cross-Reactivity / Tolerance
   - Pipeline does not systematically screen for T-cell tolerance
