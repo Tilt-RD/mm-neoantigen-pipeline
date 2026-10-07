@@ -404,7 +404,7 @@ def run_uploaded_pipeline(uploaded_file):
 
 # ── Page config ──────────────────────────────────────────────────────
 st.set_page_config(
-    page_title="MM Vaccine Designer - v2.1.8 - LIVE",
+    page_title="MM Neoantigen Candidate Explorer",
     page_icon="⟠ ",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -863,8 +863,32 @@ if not df_filtered.empty:
 # MAIN DASHBOARD
 # ══════════════════════════════════════════════════════════════════════
 
-st.markdown(f'<p class="main-header">⟠  Neoantigen Vaccine Design: {selected_patient.upper().replace("_", " ")}</p>', unsafe_allow_html=True)
-st.markdown('<p class="sub-header">Personalised mRNA cancer vaccine pipeline for multiple myeloma</p>', unsafe_allow_html=True)
+st.markdown(f'<p class="main-header">⟠  Neoantigen Candidate Explorer: {selected_patient.upper().replace("_", " ")}</p>', unsafe_allow_html=True)
+st.markdown('<p class="sub-header">Research prototype for exploring neoantigen candidates in multiple myeloma</p>', unsafe_allow_html=True)
+
+# A research-use notice exists in the footer, but almost nobody scrolls there,
+# and two limits need stating before anyone reads a number off this page.
+# First, HLA typing is not implemented: the pipeline uses population frequency
+# priors, so output is NOT specific to an individual even when that
+# individual's mutations are uploaded. Second, nothing here has had any
+# wet-lab validation. Both are easy to miss on a page headed with a patient
+# identifier and a list of ranked candidates.
+st.warning(
+    "**Research prototype — results are not patient-specific.** "
+    "HLA typing is not implemented: binding is predicted against a panel of "
+    "common European-ancestry alleles, not this patient's genotype, so the "
+    "rankings below are illustrative rather than personalised. Expression "
+    "filtering uses cohort-average values, not this patient's RNA-seq. No "
+    "output here has been experimentally validated, and the construct view "
+    "uses a placeholder 3' UTR. This is not a therapy, a treatment plan, or "
+    "a route to either.",
+    icon="⚠️",
+)
+st.caption(
+    "If you have found this page while looking for myeloma treatment for "
+    "yourself or someone else, please speak to your haematology team. Nothing "
+    "on this site can inform a treatment decision."
+)
 
 # ── Key Metrics Row ──────────────────────────────────────────────────
 
@@ -972,11 +996,26 @@ tab0, tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
 # ── Tab 0: Analyse New Patient ────────────────────────────────────────
 
 with tab0:
-    st.subheader("Upload Patient Mutation Data")
+    st.subheader("Upload Mutation Data")
     st.markdown(
-        "Upload a somatic mutation CSV file to design a personalised neoantigen vaccine. "
-        "The pipeline will automatically parse mutations, predict MHC binding across 6 HLA alleles, "
-        "and rank vaccine candidates."
+        "Upload a somatic mutation CSV to generate a ranked list of neoantigen "
+        "candidates. The pipeline parses mutations, predicts MHC binding across "
+        "a fixed panel of 6 common HLA alleles, and ranks the results."
+    )
+    st.info(
+        "**This does not produce a personalised result.** Binding is predicted "
+        "against the same 6 population-frequency alleles for every upload, "
+        "because patient HLA typing is not implemented. Two people with "
+        "identical mutations and different HLA genotypes get identical output "
+        "here, which is not how neoantigen presentation works. Treat the "
+        "ranking as a screening exercise over the mutation list, not as a "
+        "result about a person.",
+        icon="ℹ️",
+    )
+    st.caption(
+        "Do not upload identifiable patient data. This dashboard runs on "
+        "Streamlit Community Cloud, is not a validated environment for "
+        "clinical or personal health data, and has no access controls."
     )
 
     col_upload, col_format = st.columns([1, 1])
