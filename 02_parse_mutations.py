@@ -121,9 +121,32 @@ def parse_aa_change(aa_change: str) -> Optional[Tuple[str, int, str]]:
     return None
 
 
+# Whether to emit peptides whose flanking residues are filler rather than the
+# real protein sequence. Default False, and it should stay False.
+#
+# The synthetic fallback below builds a peptide from the real mutant residue
+# surrounded by the string "AEKGDLSTPV" cycled. Those peptides correspond to no
+# protein in any organism. They were previously emitted whenever UniProt was
+# unreachable or a gene was not found, tagged `sequence_source: "synthetic"` —
+# and nothing downstream read that tag: not 03_predict_binding.py, not
+# 04_design_vaccine.py, not 13_clinical_report.py, not app.py. So MHCflurry
+# scored them, they were ranked by vaccine_priority_score, and they reached the
+# construct and the dashboard indistinguishable from real peptides.
+#
+# Only four proteins (BRAF, KRAS, NRAS, TP53) have offline sequences in
+# uniprot_lookup.py, so in any environment without UniProt access a typical
+# patient produced filler peptides for roughly 65 of 69 genes.
+#
+# Failing closed means fewer candidates when UniProt is unreachable. That is the
+# correct outcome: a binding prediction on an invented sequence is not a weaker
+# result, it is not a result.
+ALLOW_SYNTHETIC_PEPTIDES = False
+
+
 def generate_mutant_peptides(wt_aa: str, position: int, mut_aa: str,
                               peptide_lengths: list = [8, 9, 10, 11],
-                              gene_symbol: str = None) -> list:
+                              gene_symbol: str = None,
+                              allow_synthetic: bool = None) -> list:
     """
     Generate all possible mutant peptide windows containing the mutation.
 
@@ -144,9 +167,20 @@ def generate_mutant_peptides(wt_aa: str, position: int, mut_aa: str,
             if real_peptides:
                 return real_peptides
         except ImportError:
-            pass  # uniprot_lookup not available, use synthetic
+            pass  # uniprot_lookup not available
 
-    # Fallback: synthetic peptide generation
+    # No real protein context was obtained. Fail closed unless synthetic
+    # peptides have been explicitly requested.
+    if allow_synthetic is None:
+        allow_synthetic = ALLOW_SYNTHETIC_PEPTIDES
+    if not allow_synthetic:
+        return []
+
+    # Fallback: synthetic peptide generation.
+    #
+    # Reached only on an explicit opt-in. Every peptide below carries
+    # sequence_source="synthetic" and must be filtered out before any binding
+    # prediction is interpreted. The flanking residues are filler.
     peptides = []
     common_residues = "AEKGDLSTPV"
 

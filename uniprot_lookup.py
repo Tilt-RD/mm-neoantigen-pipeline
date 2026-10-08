@@ -170,6 +170,7 @@ def generate_real_peptides(
     position: int,
     mut_aa: str,
     peptide_lengths: list = None,
+    allow_synthetic: bool = False,
 ) -> list:
     """
     Generate sliding-window peptides around a mutation using real protein context.
@@ -225,6 +226,29 @@ def generate_real_peptides(
         )
 
     # Fallback: synthetic peptide generation
+    # No usable real sequence. Fail closed.
+    #
+    # _peptides_synthetic builds a peptide from the real mutant residue wrapped
+    # in the string "AEKGDLSTPV" cycled. It corresponds to no protein in any
+    # organism. It was returned here whenever UniProt was unreachable or the
+    # sequence did not cover the mutation site, and although each peptide was
+    # tagged sequence_source="synthetic", no consumer in this repository ever
+    # read that field. The peptides were scored by MHCflurry, ranked by
+    # vaccine_priority_score, and reached the construct and the dashboard
+    # indistinguishable from real ones.
+    #
+    # Returning nothing yields fewer candidates when UniProt is unavailable,
+    # which is correct. A binding affinity computed on an invented sequence is
+    # not a weaker result, it is not a result. Pass allow_synthetic=True only
+    # for testing the peptide-windowing logic itself.
+    if not allow_synthetic:
+        logger.warning(
+            "No real sequence for %s; returning no peptides. "
+            "Set allow_synthetic=True only to test windowing logic.",
+            gene_symbol,
+        )
+        return []
+
     return _peptides_synthetic(wt_aa, position, mut_aa, peptide_lengths)
 
 
